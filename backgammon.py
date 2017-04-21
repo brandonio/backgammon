@@ -30,13 +30,16 @@ class Board:
 			self.curplayer = "w"
 
 	def whoWon(self):
-		if isWinner():
-			if len(self.whiteeat) == 15:
-				return "w"
-			elif len(self.blackeat) == 15:
-				return "b"
-		else:
-			return ""
+		if len(self.whiteeat) == 15:
+			if self.compIsWhite:
+				print("The computer won!")
+			else:
+				print("You won!")
+		elif len(self.blackeat) == 15:
+			if not self.compIsWhite:
+				print("The computer won!")
+			else:
+				print("You won!")
 
 	def isWinner(self):
 		if len(self.whiteeat) == 15 or len(self.blackeat) == 15:
@@ -57,6 +60,23 @@ class Board:
 		if tot == 15:
 			return True
 		else:
+			return False
+
+	def isClear(self, a, b, rolls):
+		if b < a:
+			a, b = b, a
+		if len(rolls) > 2:
+			for i in rolls:
+				a += i
+				if not self.sameColor(a, self.ignore):
+					print("The opponent is blocking that path. Try again.")
+					return False
+		if len(rolls) == 1:
+			print("this should never be printed")
+		if self.sameColor(a + rolls[0], self.ignore) or self.sameColor(a + rolls[1], self.ignore):
+			return True
+		else:
+			print("The opponent is blocking that path. Try again.")
 			return False
 
 	def path(self, dist):
@@ -183,16 +203,13 @@ class Board:
 		if len(x) * r[2] > len(self.curoll):
 			print("You cannot move that many pieces that far. Try again.")
 			return False
-		if not self.isValid(r[0], r[1], r[2]):
+		if not self.isValid(r[0], r[1], r[2]) or not self.isClear(r[0], r[1], x):
 			return False
 		else:
-			return self.order(r[0], r[1], x)
+			return x
 
 	def setCuroll(self, lst):
 		self.curoll = lst
-
-	# def order(self, a, b, path):
-	# 	if not self.sameColor(b, self.ignore)
 
 	def ignore(self, *args, **kwargs):
 		x = 0 #pointless
@@ -327,7 +344,7 @@ def p(i):
 def start():
 	intro()
 	gb = Board(makeNew())
-	lst = ["It is the computer's turn.", "It is your turn. "]
+	lst = ["It is the computer's turn. ", "It is your turn. "]
 	isComp = gb.ciw()
 	p(2)
 	if not isComp:
@@ -350,6 +367,7 @@ def start():
 			print()
 		isComp = not isComp
 		gb.changePlayer()
+	gb.whoWon()
 
 def roll():
 	ret = []
@@ -371,7 +389,7 @@ class Piece:
 
 def makeNew():
 	b = {}
-	for i in range(1, 25):
+	for i in range(0, 26):
 		b[i] = []
 	b[1] = [Piece("w") for x in range(2)]
 	b[12] = [Piece("w") for x in range(5)]
@@ -386,10 +404,3 @@ def makeNew():
 # def shouldEat(p, n):
 
 start()
-
-
-
-
-
-
-
