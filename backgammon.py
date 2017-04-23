@@ -7,8 +7,8 @@ class Board:
 	whiteeat = []
 	blackeat = []
 	curoll = []
-	compdubs = 0
-	humandubs = 0
+	whitedubs = 0
+	blackdubs = 0
 	winner = ""
 	curplayer = "w" #will switch b/w "w" and "b" and starts with "w"
 	compIsWhite = True
@@ -17,8 +17,8 @@ class Board:
 		self.board = board
 		self.compIsWhite = firstRoll()
 
-	def cur():
-		return self.curplayer
+	# def cur():
+	# 	return self.curplayer
 
 	def ciw(self):
 		return self.compIsWhite
@@ -57,6 +57,10 @@ class Board:
 		for i in r:
 			if self.board[i] and self.board[i][0].color == self.curplayer:
 				tot += len(self.board[i])
+		if self.curplayer == "w":
+			tot += len(whiteeat)
+		else:
+			tot += len(blackeat)
 		if tot == 15:
 			return True
 		else:
@@ -161,13 +165,13 @@ class Board:
 	def dubs(self, r): #this function is actually so crucial lol
 		self.curoll = r
 		if len(r) == 4:
-			if self.compIsWhite:
-				self.compdubs += 1
+			if self.curplayer == "w":
+				self.whitedubs += 1
 			else:
-				self.humandubs += 1
+				self.blackdubs += 1
 		if not self.canMove(self.ignore):
 			opens = []
-			if self.compIsWhite:
+			if self.curplayer == "w":
 				for i in range(1, 7):
 					if self.isEmpty(i):
 						opens.append(i)
@@ -183,7 +187,6 @@ class Board:
 				return True
 		else:
 			return True
-
 
 	def parse(self, r):
 		if len(r) < 2:
@@ -217,7 +220,10 @@ class Board:
 	def handle(self):
 		r = []
 		self.canMove()
-		s = input("Make your move...")
+		if (self.curplayer == "w" and self.whiteout) or (self.curplayer == "b" and self.blackeat):
+			s = input("Make your move. Remember, you have pieces you need to put into play...")
+		else:
+			s = input("Make your move...")
 		for i in s.split():
 			if i.isdigit():
 				r.append(int(i))
@@ -322,6 +328,7 @@ def firstRoll():
 	x = random.randint(1, 6)
 	y = random.randint(1, 6)
 	while x == y:
+		print("It was a tie! We'll roll again!")
 		x = random.randint(1, 6)
 		y = random.randint(1, 6)
 	if x > y:
@@ -332,12 +339,13 @@ def firstRoll():
 		return False #computer is black and goes second
 
 def intro():
-	print("Welcome to Brandon's Backgammon Bot!")
+	print("Welcome to Brandon's Backgammon Game!")
 	print("-------------------------------------")
-	print("Enter two or three numbers to make a move. For example: '3 8' means you want to move a piece from position 3 to position 8 and '3 8 2' means you want to move 2 pieces from position 3 to position 8.")
-	print("Let's get started! Who will go first? ", end="")
+	print("Enter two or three numbers to make a move. For example: '3 8' means you want to move a piece from position 3 to position 8 and '3 8 2' means you want to move 2 pieces from position 3 to position 8. White eats at 25 and Black eats at 0, so '22 25' means white wants to eat a piece at position 22.")
+	input("Press the enter key once you understand how to play!")
+	print("Great! Let's get started! But who will go first? ", end="")
 
-def p(i):
+def p(i=1):
 	for x in range(i):
 		print()
 
@@ -363,8 +371,7 @@ def start():
 				for i in usedRolls:
 					r.remove(i)
 				gb.setCuroll(r)
-		for i in range(4):
-			print()
+		p(4)
 		isComp = not isComp
 		gb.changePlayer()
 	gb.whoWon()
