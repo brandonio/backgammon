@@ -2,69 +2,15 @@ import random
 
 class Board:
 	board = {}
-	whiteout = []
-	blackout = []
-	whiteeat = []
-	blackeat = []
-	curoll = []
-	whitedubs = 0
-	blackdubs = 0
-	winner = ""
+	whiteout, blackout, whitefin, blackfin, curoll = [], [], [], [], []
+	whitedubs, blackdubs = 0, 0
 	curplayer = "w" #will switch b/w "w" and "b" and starts with "w"
-	compIsWhite = True
+	winner, name1, name2 = "", "", ""
+	fiw = True
 
 	def __init__(self, board):
 		self.board = board
-		self.compIsWhite = firstRoll()
-
-	# def cur():
-	# 	return self.curplayer
-
-	def ciw(self):
-		return self.compIsWhite
-
-	def changePlayer(self):
-		if self.curplayer == "w":
-			self.curplayer = "b"
-		elif self.curplayer == "b":
-			self.curplayer = "w"
-
-	def whoWon(self):
-		if len(self.whiteeat) == 15:
-			if self.compIsWhite:
-				print("The computer won!")
-			else:
-				print("You won!")
-		elif len(self.blackeat) == 15:
-			if not self.compIsWhite:
-				print("The computer won!")
-			else:
-				print("You won!")
-
-	def isWinner(self):
-		if len(self.whiteeat) == 15 or len(self.blackeat) == 15:
-			return True
-		else:
-			return False
-
-	def canFinish(self):
-		tot = 0
-		r = []
-		if self.curplayer == "w":
-			r = range(19, 25)
-		else:
-			r = range(1, 7)
-		for i in r:
-			if self.board[i] and self.board[i][0].color == self.curplayer:
-				tot += len(self.board[i])
-		if self.curplayer == "w":
-			tot += len(whiteeat)
-		else:
-			tot += len(blackeat)
-		if tot == 15:
-			return True
-		else:
-			return False
+		self.fiw, self.name1, self.name2 = firstRoll()
 
 	def isClear(self, a, b, rolls):
 		if b < a:
@@ -72,15 +18,68 @@ class Board:
 		if len(rolls) > 2:
 			for i in rolls:
 				a += i
-				if not self.sameColor(a, self.ignore):
-					print("The opponent is blocking that path. Try again.")
+				if not self.sameColor(a, False):
+					print(self.opponent() + " is blocking that path. Try again.")
 					return False
-		if len(rolls) == 1:
-			print("this should never be printed")
-		if self.sameColor(a + rolls[0], self.ignore) or self.sameColor(a + rolls[1], self.ignore):
+		if self.sameColor(a + rolls[0], False) or self.sameColor(a + rolls[1], False):
 			return True
 		else:
-			print("The opponent is blocking that path. Try again.")
+			print(self.opponent() + " is blocking that path. Try again.")
+			return False
+
+	def canMove(self, f=True):
+		if self.curplayer == "w" and not self.whiteout:
+			return True
+		elif self.curplayer == "b" and not self.blackout:
+			return True
+		if f:
+			f("You have eaten pieces you need to play first. ", end="")
+		return False
+
+	def isValid(self, a, b, x):
+		if b == 0:
+			if self.curplayer == "w":
+				print("That is where " + self.opponent() + " eats pieces. You eat at 25. Try again.")
+				return False
+			else:
+				if self.canFinish():
+					return True
+				else:
+					print("You cannot eat pieces yet. Try again.")
+					return False
+		if b == 25:
+			if self.curplayer == "b":
+				print("That is where " + self.opponent() + " eats pieces. You eat at 0. Try again.")
+				return False
+			else:
+				if self.canFinish():
+					return True
+				else:
+					print("You cannot eat pieces yet. Try again.")
+		if a == 0:
+			if self.curplayer == "b":
+				print("You cannot bring " + self.opponent() + "'s pieces into play. Try again.")
+				return False
+			else:
+				return True
+		if a == 25:
+			if self.curplayer == "w":
+				print("You cannot bring " + self.opponent() + "'s pieces into play. Try again.")
+				return False
+			else:
+				return True
+		if a not in range(1, 25) or b not in range(0, 26):
+			print("Those are not valid positions. Try again.")
+			return False
+		elif self.isEmpty(a, x):
+			print("There are not enough pieces at position " + str(a) + ". Try again.")
+			return False
+		elif self.curplayer != self.board[a][0].color:
+			print("You cannot move " + self.opponent() + "'s piece. Try again.")
+			return False
+		elif self.direction(a, b) and (self.isEmpty(b, x) or self.sameColor(b) or self.canEat(b)) and self.canMove():
+			return True
+		else:
 			return False
 
 	def path(self, dist):
@@ -95,98 +94,16 @@ class Board:
 				return self.curoll
 			else:
 				return []
-		x = self.curoll[0]
-		if dist % x != 0:
+		val = self.curoll[0]
+		if dist % val != 0:
 			return []
-		elif dist/x <= len(self.curoll):
+		elif int(dist/val) <= len(self.curoll):
 			ret = []
-			for i in range(int(dist/x)):
-				ret.append(x)
+			for i in range(int(dist/val)):
+				ret.append(val)
 			return ret
 		else:
 			return []
-
-	def canMove(self, f=print):
-		if self.curplayer == "w" and not self.whiteout:
-			return True
-		elif self.curplayer == "b" and not self.blackout:
-			return True
-		else:
-			f("You have eaten pieces you need to play first. ", end="")
-			return False
-
-	def isEmpty(self, a, x=1):
-		if not self.board[a] or len(self.board[a]) < x:
-			return True
-		else:
-			return False
-
-	def direction(self, a, b):
-		if self.curplayer == "w" and a < b:
-			return True
-		elif self.curplayer == "b" and a > b:
-			return True
-		else:
-			print("You are trying to move in the wrong direction. Try again.")
-			return False
-
-	def canEat(self, b):
-		if len(self.board[b]) == 1:
-			return True
-		else:
-			return False
-
-	def sameColor(self, b, f=print):
-		if self.isEmpty(b):
-			return True #not needed tbh
-		elif self.board[b][0].color == self.curplayer:
-			return True
-		elif self.canEat(b):
-			return True
-		else:
-			f("The opponent is blocking position " + str(b) + ". Try again.")
-			return False
-
-	def isValid(self, a, b, x):
-		if a not in range(1, 25) or b not in range(1, 25):
-			print("Those are not valid positions. Try again.")
-			return False
-		elif self.isEmpty(a, x):
-			print("There are not enough pieces at position " + str(a) + ". Try again.")
-			return False
-		elif self.curplayer != self.board[a][0].color:
-			print("You cannot move your opponent's piece. Try again.")
-			return False
-		elif self.direction(a, b) and (self.isEmpty(b, x) or self.sameColor(b) or self.canEat(b)): #and self.canMove():
-			return True
-		else:
-			return False
-
-	def dubs(self, r): #this function is actually so crucial lol
-		self.curoll = r
-		if len(r) == 4:
-			if self.curplayer == "w":
-				self.whitedubs += 1
-			else:
-				self.blackdubs += 1
-		if not self.canMove(self.ignore):
-			opens = []
-			if self.curplayer == "w":
-				for i in range(1, 7):
-					if self.isEmpty(i):
-						opens.append(i)
-			else:
-				for i in range(19, 25):
-					if self.isEmpty(i):
-						opens.append(25 - i)
-			s = set(r)
-			opens = set(opens)
-			if not s.intersection(opens):
-				return False
-			else:
-				return True
-		else:
-			return True
 
 	def parse(self, r):
 		if len(r) < 2:
@@ -195,10 +112,20 @@ class Board:
 		elif len(r) > 3:
 			print("You entered too many numbers. Try again.")
 			return False
-		elif len(r) == 3:
-			if r[2] < 1 or r[2] > len(self.curoll):
-				print("You cannot move that many times. Try again.")
-				return False
+		if r[2] < 1 or r[2] > len(self.curoll):
+			print("You cannot move " + str(r[2]) + " times. Try again.")
+			return False
+		if r[0] == 0 or r[0] == 25:
+			print("Those are not valid positions. Try again.")
+			return False
+		if r[0] == "x":
+			if (self.canMove(False)):
+				print("You do not have any eaten pieces to bring into play. Try again.")
+			else:
+				if self.curplayer == "w":
+					r[0] = 0
+				else:
+					r[0] = 25
 		x = self.path(abs(r[0] - r[1]))
 		if not x:
 			print("You cannot reach that position. Try again.")
@@ -211,22 +138,20 @@ class Board:
 		else:
 			return x
 
-	def setCuroll(self, lst):
-		self.curoll = lst
-
-	def ignore(self, *args, **kwargs):
-		x = 0 #pointless
-
 	def handle(self):
 		r = []
-		self.canMove()
-		if (self.curplayer == "w" and self.whiteout) or (self.curplayer == "b" and self.blackeat):
-			s = input("Make your move. Remember, you have pieces you need to put into play...")
+		# self.canMove()
+		f = False
+		if (self.curplayer == "w" and self.whiteout) or (self.curplayer == "b" and self.blackout):
+			f = True
+			s = input("Notice that you have pieces out of play. Make your move...")
 		else:
 			s = input("Make your move...")
 		for i in s.split():
 			if i.isdigit():
 				r.append(int(i))
+		if "x" in s:
+			r.insert(0, "x")
 		if len(r) == 2:
 			r.append(1)
 		x = self.parse(r)
@@ -240,25 +165,39 @@ class Board:
 			if len(r) == 2:
 				r.append(1)
 			x = self.parse(r)
-		# if 
 		ret = []
 		for i in range(r[2]):
-			self.move(r[0], r[1])
+			self.move(r[0], r[1], f)
 			ret.extend(x)
 		return ret
 
-	def move(self, a, b):
-		if len(self.board[b]) == 1 and self.board[b][0].color != self.curplayer:
+	def names(self):
+		return self.name1, self.name2
+
+	def setCuroll(self, lst):
+		self.curoll = lst
+
+	def ignore(self, *args, **kwargs):
+		x = 0 #pointless
+
+	def move(self, a, b, f):
+		if f:
 			if self.curplayer == "w":
-				self.blackout.append(self.board[b].pop())
-			else:
-				self.whiteout.append(self.board[b].pop())
-		self.board[b].append(self.board[a].pop())
+				self.board[b].append(self.whiteout.pop())
+			elif self.curplayer == "b":
+				self.board[b].append(self.blackout.pop())
+		else:
+			if len(self.board[b]) == 1 and self.board[b][0].color != self.curplayer:
+				if self.curplayer == "w":
+					self.blackout.append(self.board[b].pop())
+				else:
+					self.whiteout.append(self.board[b].pop())
+			self.board[b].append(self.board[a].pop())
 
 	def prettyprint(self):
 		def newprint(*args, **kwargs):
 			print("\033[4m"+args[0]+"\033[0m", end="")
-		print("The rolls are: ", end="")
+		print("Your rolls are: ", end="")
 		print(str(list(self.curoll))[1:len(str(list(self.curoll))) - 1]) #disgusting way to print the rolls
 		# print(" and ", end="")
 		height = 0
@@ -288,13 +227,15 @@ class Board:
 					print("|  ", end="")
 			i += 1
 			print()
-		for i in range(2):
-			print("|                    |  |                    |")
-		height = 0
 		for i in range(1, 14):
 			if len(self.board[i]) > height:
 				height = len(self.board[i])
-		i = height
+		i = max(height, 5)
+		num = 0
+		if 5 > height:
+			num += 5 - height
+		for v in range(num + 2):
+			print("|                    |  |                    |")
 		func = print
 		while i > 0:
 			for x in range(1, 13):
@@ -322,28 +263,155 @@ class Board:
 		print("  01 02 03 04 05 06        07 08 09 10 11 12  ")
 		print()	
 
+	def isEmpty(self, a, x=1):
+		if not self.board[a] or len(self.board[a]) < x:
+			return True
+		else:
+			return False
+
+	def sameColor(self, b, f=True):
+		if self.isEmpty(b):
+			return True #not needed tbh
+		elif self.board[b][0].color == self.curplayer:
+			return True
+		elif self.canEat(b):
+			return True
+		if f:
+			print(self.opponent() + " is blocking position " + str(b) + ". Try again.")
+		return False
+
+	def opponent(self):
+		if self.curplayer == "w":
+			if self.fiw:
+				return self.name2
+			else:
+				return self.name1
+		elif self.curplayer == "b":
+			if self.fiw:
+				return self.name1
+			else:
+				return self.name2
+
+	def isWinner(self):
+		if len(self.whitefin) == 15 or len(self.blackfin) == 15:
+			return True
+		else:
+			return False
+
+	def dubs(self, r): #this function is actually so crucial lol
+		self.curoll = r
+		if len(r) == 4:
+			if self.curplayer == "w":
+				self.whitedubs += 1
+			else:
+				self.blackdubs += 1
+		if not self.canMove(False):
+			opens = []
+			if self.curplayer == "w":
+				for i in range(1, 7):
+					if self.isEmpty(i):
+						opens.append(i)
+			else:
+				for i in range(19, 25):
+					if self.isEmpty(i):
+						opens.append(25 - i)
+			s = set(r)
+			opens = set(opens)
+			if not s.intersection(opens):
+				return False
+			else:
+				return True
+		else:
+			return True
+
+	# def cur():
+	# 	return self.curplayer
+
+	def direction(self, a, b):
+		if self.curplayer == "w" and a < b:
+			return True
+		elif self.curplayer == "b" and a > b:
+			return True
+		else:
+			print("You are trying to move in the wrong direction. Try again.")
+			return False
+
+	def canEat(self, b):
+		if len(self.board[b]) == 1:
+			return True
+		else:
+			return False
+
+	def ciw(self):
+		return self.fiw
+
+	def changePlayer(self):
+		if self.curplayer == "w":
+			self.curplayer = "b"
+		elif self.curplayer == "b":
+			self.curplayer = "w"
+
+	def whoWon(self):
+		if len(self.whitefin) == 15:
+			if self.fiw:
+				print(name2 + " won!")
+			else:
+				print(name1 + " won!")
+		elif len(self.blackfin) == 15:
+			if not self.fiw:
+				print(name2 + " won!")
+			else:
+				print(name1 + " won!")
+
+	def canFinish(self):
+		tot = 0
+		r = []
+		if self.curplayer == "w":
+			r = range(19, 25)
+		else:
+			r = range(1, 7)
+		for i in r:
+			if self.board[i] and self.board[i][0].color == self.curplayer:
+				tot += len(self.board[i])
+		if self.curplayer == "w":
+			tot += len(whitefin)
+		else:
+			tot += len(blackfin)
+		if tot == 15:
+			return True
+		else:
+			return False
+
+
+
 def firstRoll():
 	print(" A high roll wins and the winner will play as white.")
+	name1 = input("Who will roll first?\n").title()
+	name2 = input("Who will roll second?\n").title()
 	print("Rolling...")
 	x = random.randint(1, 6)
 	y = random.randint(1, 6)
 	while x == y:
-		print("It was a tie! We'll roll again!")
+		# print("It was a tie! We'll roll again!")
 		x = random.randint(1, 6)
 		y = random.randint(1, 6)
+	print(name1 + " rolled a " + str(x), end="")
+	print(" and " + name2 + " rolled a " + str(y), end="")
+	b = True
 	if x > y:
-		print("The computer rolled a " + str(x) + " and you rolled a " + str(y) + ", so the computer will be white and you will be black.")
-		return True #computer is white and goes first
+		print(", so " + name1 + " will be white and " + name2 + " will be black.")
+		b = True #computer is white and goes first
 	else:
-		print("You rolled a " + str(y) + " and the computer rolled a " + str(x) + ", so you will be white and the computer will be black.")
-		return False #computer is black and goes second
+		print(", so " + name2 + " will be white and " + name1 + " will be black.")
+		b = False #computer is black and goes second
+	return b, name1, name2
 
 def intro():
 	print("Welcome to Brandon's Backgammon Game!")
 	print("-------------------------------------")
-	print("Enter two or three numbers to make a move. For example: '3 8' means you want to move a piece from position 3 to position 8 and '3 8 2' means you want to move 2 pieces from position 3 to position 8. White eats at 25 and Black eats at 0, so '22 25' means white wants to eat a piece at position 22.")
+	print("Making moves is relatively straightforward.")
+	print("For example: '3 8' means you want to move a piece from position 3 to position 8 and '3 8 2' means you want to move 2 pieces from position 3 to position 8. White eats at 25 and Black eats at 0, so '22 25' means white wants to eat a piece at position 22. To bring an eaten piece back into play, use 'x' as your starting position, regardless of your color. For example: 'x 3' means you want to move an eaten piece to position 3.")
 	input("Press the enter key once you understand how to play!")
-	print("Great! Let's get started! But who will go first? ", end="")
 
 def p(i=1):
 	for x in range(i):
@@ -351,11 +419,12 @@ def p(i=1):
 
 def start():
 	intro()
+	print("Great! Let's get started! But who will go first? ", end="")
 	gb = Board(makeNew())
-	lst = ["It is the computer's turn. ", "It is your turn. "]
-	isComp = gb.ciw()
+	n1, n2 = gb.names()
+	lst = ["It is " + n1 + "'s turn. ", "It is " + n2 + "'s turn. "]
 	p(2)
-	if not isComp:
+	if not gb.ciw():
 		lst = lst[::-1]
 	ind = 0
 	while not gb.isWinner():
@@ -372,7 +441,6 @@ def start():
 					r.remove(i)
 				gb.setCuroll(r)
 		p(4)
-		isComp = not isComp
 		gb.changePlayer()
 	gb.whoWon()
 
