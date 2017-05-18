@@ -18,23 +18,23 @@ class Board:
 		if len(rolls) > 2:
 			for i in rolls:
 				a += i
-				if not self.sameColor(a, False):
-					print(self.opponent() + " is blocking that path. Try again.")
+				if not self.sameColor(a):
 					return False
 			return True
-		if self.sameColor(a + rolls[0], False) or self.sameColor(a + rolls[1], False):
+		if self.sameColor(a + rolls[0], False) or (rolls[1] and self.sameColor(a + rolls[1], False)):
+			print("should be clear")
 			return True
 		else:
 			print(self.opponent() + " is blocking that path. Try again.")
 			return False
 
-	def canMove(self, f=True):
+	def canMove(self, f=False):
 		if self.curplayer == "w" and not self.whiteout:
 			return True
-		elif self.curplayer == "b" and not self.blackout:
+		if self.curplayer == "b" and not self.blackout:
 			return True
 		if f:
-			f("You have eaten pieces you need to play first. ", end="")
+			print("You have eaten pieces you need to play first. ", end="")
 		return False
 
 	def isValid(self, a, b, x):
@@ -61,7 +61,7 @@ class Board:
 				print("You cannot bring " + self.opponent() + "'s pieces into play. Try again.")
 				return False
 			elif self.canMove():
-				print("You do have any pieces to bring back into play. Try again.")
+				print("You do not have any pieces to bring back into play. Try again.")
 				return False
 		if a == 25:
 			f = False
@@ -69,7 +69,7 @@ class Board:
 				print("You cannot bring " + self.opponent() + "'s pieces into play. Try again.")
 				return False
 			elif self.canMove():
-				print("You do have any pieces to bring back into play. Try again.")
+				print("You do not have any pieces to bring back into play. Try again.")
 				return False
 		if a not in range(0, 26) or b not in range(0, 26):
 			print("Those are not valid positions. Try again.")
@@ -84,82 +84,88 @@ class Board:
 			if self.curplayer != self.board[a][0].color:
 				print("You cannot move " + self.opponent() + "'s piece. Try again.")
 				return False
-			if self.direction(a, b) and (self.isEmpty(b, 1) or self.sameColor(b) or self.canEat(b)) and self.canMove():
+			if self.direction(a, b) and (self.isEmpty(b) or self.sameColor(b) or self.canEat(b)) and self.canMove(True):
 				return True
 			else:
 				return False
 		else:
-			if a == 25:
-				if len(self.whiteout) < x:
-					print("You do not have that many pieces to bring back into play. Try again.")
-					return False
-			elif a == 0:
-				if len(self.blackout) < x:
-					print("You do not have that many pieces to bring back into play. Try again.")
-					return False
-			elif not self.direction(a, b):
+			if a == 0:
+				arr = self.whiteout
+			elif a == 25:
+				arr = self.blackout
+			if len(arr) < x:
+				str = ""
+				if x == 1:
+					str = " 1 piece "
+				else:
+					str = " " + str(x) + " pieces "
+				print("You do not have" + str + "to bring back into play. Try again.")
 				return False
-			elif b != 25 and b != 0:
-				if not (self.isEmpty(b, 1) or self.sameColor(b) or self.canEat(b)):
-					return False
-			else:
+			if self.direction(a, b) and (self.isEmpty(b) or self.sameColor(b) or self.canEat(b)):
+				print("made it into here :)")
 				return True
+			else:
+				print("last statement in isValid")
+				return False
 			
 	def path(self, dist, f):
-			if dist == 0:
+		if dist == 0:
+			print("You cannot move 0 steps. Try again.")
+			return []
+		if dist in self.curoll:
+			print("this is where i should see us")
+			print(dist, f)
+			return [dist]
+		elif len(self.curoll) == 1:
+			if f:
 				return []
-			if dist in self.curoll:
-				return [dist]
-			elif len(self.curoll) == 1:
-				if f:
-					return []
-				else:
-					if dist <= self.curoll[0]: # = not needed since it woulda been caught but oh well
-						return [self.curoll[0]]
-					else:
-						return []
-			elif len(self.curoll) == 2:
-				if f:
-					if sum(self.curoll) == dist:
-						return self.curoll
-					else:
-						return []
-				else:
-					if dist <= self.curoll[0]:
-						return [self.curoll[0]]
-					if dist <= self.curoll[1]:
-						return [self.curoll[1]]
-					if dist <= sum(self.curoll):
-						return self.curoll
-					else:
-						return []
-			val = self.curoll[0]
-			if not f:
-				ret = []
-				sum = 0
-				i = 0
-				while sum < dist and i < len(self.curoll):
-					ret.append(v)
-					sum += v
-					i += 1
-				if sum < dist:
-					return []
-				else:
-					return ret
 			else:
-				if dist % val != 0:
-					return []
-				elif int(dist/val) <= len(self.curoll):
-					ret = []
-					for i in range(int(dist/val)):
-						ret.append(val)
-					return ret
+				if dist <= self.curoll[0]: # = not needed since it woulda been caught but oh well
+					return [self.curoll[0]]
 				else:
 					return []
+		elif len(self.curoll) == 2:
+			if f:
+				if sum(self.curoll) == dist:
+					return self.curoll
+				else:
+					return []
+			else:
+				if dist <= self.curoll[0]:
+					return [self.curoll[0]]
+				if dist <= self.curoll[1]:
+					return [self.curoll[1]]
+				if dist <= sum(self.curoll):
+					return self.curoll
+				else:
+					return []
+		val = self.curoll[0]
+		if not f:
+			ret = []
+			s = 0
+			i = 0
+			while s < dist and i < len(self.curoll):
+				ret.append(v)
+				s += v
+				i += 1
+			if s < dist:
+				return []
+			else:
+				return ret
+		else:
+			if dist % val != 0:
+				return []
+			elif int(dist/val) <= len(self.curoll):
+				ret = []
+				for i in range(int(dist/val)):
+					ret.append(val)
+				return ret
+			else:
+				return []
 
 	def parse(self, r):
 		f = True
-		if len(r) < 2:
+		if len(r) < 3:
 			print("You need to enter at least a starting and ending position. Try again.")
 			return False
 		elif len(r) > 3:
@@ -176,15 +182,20 @@ class Board:
 			if not self.canFinish():
 				print("You cannot eat pieces yet. Try again.")
 				return False
-		if r[0] == "x":
-			if self.canMove(False):
+		if r[0] == 'x':
+			# f = False
+			print("hola")
+			if self.canMove():
 				print("You do not have any eaten pieces to bring into play. Try again.")
+				return False
 			else:
 				if self.curplayer == "w":
 					r[0] = 0
 				else:
 					r[0] = 25
+				print(r)
 		x = self.path(abs(r[0] - r[1]), f)
+		print(x)
 		if not x:
 			print("You cannot reach that position. Try again.")
 			return False
@@ -192,36 +203,38 @@ class Board:
 			print("You cannot move that many pieces that far. Try again.")
 			return False
 		if not self.isValid(r[0], r[1], r[2]) or not self.isClear(r[0], r[1], x):
+			print(r[0])
+			print(r[1])
+			print(r[2])
+			print(x)
+			print("Something went wrong")
 			return False
 		else:
 			return x
 
 	def handle(self):
-		r = []
-		# self.canMove()
+		x = []
 		f = False
-		if (self.curplayer == "w" and self.whiteout) or (self.curplayer == "b" and self.blackout):
-			f = True
-			s = input("Notice that you have pieces out of play. Make your move...")
-		else:
-			s = input("Make your move...")
-		for i in s.split():
-			if i.isdigit():
-				r.append(int(i))
-		if "x" in s:
-			r.insert(0, "x")
-		if len(r) == 2:
-			r.append(1)
-		x = self.parse(r)
 		while not x:
 			r = []
-			self.canMove()
-			s = input("Make your move...")
-			for i in s.split():
+			# self.canMove()
+			if not self.canMove():
+				f = True
+				s = input("Notice that you have pieces out of play. Make your move...")
+			else:
+				s = input("Make your move...")
+			spl = s.split()
+			for i in spl:
 				if i.isdigit():
 					r.append(int(i))
+			if 'x' in spl:
+				r.insert(0, 'x')
+				print(r) #dont forget to comment this out!
+				print(len(r))
 			if len(r) == 2:
 				r.append(1)
+				print(r)
+				print(len(r))
 			x = self.parse(r)
 		ret = []
 		for i in range(r[2]):
@@ -254,7 +267,7 @@ class Board:
 			if len(self.board[b]) == 1 and self.board[b][0].color != self.curplayer:
 				if self.curplayer == "w":
 					self.blackout.append(self.board[b].pop())
-				else:
+				elif self.curplayer == "b":
 					self.whiteout.append(self.board[b].pop())
 			self.board[b].append(self.board[a].pop())
 
@@ -268,7 +281,7 @@ class Board:
 		for i in range(13, 25):
 			if len(self.board[i]) > height:
 				height = len(self.board[i])
-		print("\033[4m  24 23 22 21 20 19        18 17 16 15 14 13  \033[0m")
+		print("\033[4m  24 23 22 21 20 19         18 17 16 15 14 13  \033[0m")
 		i = 1
 		while i <= height:
 			for x in range(24, 12, -1):
@@ -284,11 +297,11 @@ class Board:
 					print("   ", end="")
 				if x == 19:
 					if self.blackout and len(self.blackout) >= i:
-						print(" |\u26AB |  ", end="")
+						print(" | \u26AB |  ", end="")
 					else:
-						print(" |  |  ", end="")
+						print(" |   |  ", end="")
 				if x == 13:
-					print("|  ", end="")
+					print("|", end="")
 			i += 1
 			print()
 		for i in range(1, 14):
@@ -299,7 +312,7 @@ class Board:
 		if 5 > height:
 			num += 5 - height
 		for v in range(num + 2):
-			print("|                    |  |                    |")
+			print("|                    |   |                    |")
 		func = print
 		while i > 0:
 			for x in range(1, 13):
@@ -317,14 +330,14 @@ class Board:
 					func("   ", end="")
 				if x == 6:
 					if self.whiteout and len(self.whiteout) >= i:
-						func(" |\u26AA |  ", end="")
+						func(" | \u26AA |  ", end="")
 					else:
-						func(" |  |  ", end="")
+						func(" |   |  ", end="")
 				if x == 12:
 					func("|", end="")
 			i -= 1
 			print()
-		print("  01 02 03 04 05 06        07 08 09 10 11 12  ")
+		print("  01 02 03 04 05 06         07 08 09 10 11 12  ")
 		if self.whitefin:
 			n = ""
 			if self.fiw:
@@ -355,10 +368,10 @@ class Board:
 
 	def sameColor(self, b, f=True):
 		if self.isEmpty(b):
-			return True #not needed tbh
-		elif self.board[b][0].color == self.curplayer:
 			return True
-		elif self.canEat(b):
+		if self.canEat(b):
+			return True
+		if self.board[b][0].color == self.curplayer:
 			return True
 		if f:
 			print(self.opponent() + " is blocking position " + str(b) + ". Try again.")
@@ -389,7 +402,7 @@ class Board:
 				self.whitedubs += 1
 			else:
 				self.blackdubs += 1
-		if not self.canMove(False):
+		if not self.canMove():
 			opens = []
 			if self.curplayer == "w":
 				for i in range(1, 7):
@@ -438,14 +451,18 @@ class Board:
 	def whoWon(self):
 		if len(self.whitefin) == 15:
 			if self.fiw:
-				print(name1 + " won!")
+				print(name1 + " won! Congratulations!")
+				print("You rolled " + str(len(self.whitedubs)) + " doubles and " + self.opponent() + " rolled " + str(len(self.blackdubs)) + ".")
 			else:
-				print(name2 + " won!")
+				print(name2 + " won! Congratulations!")
+				print("You rolled " + str(len(self.blackdubs)) + " doubles and " + self.opponent() + " rolled " + str(len(self.whitedubs)) + ".")
 		elif len(self.blackfin) == 15:
 			if self.fiw:
-				print(name2 + " won!")
+				print(name2 + " won! Congratulations!")
+				print("You rolled " + str(len(self.blackdubs)) + " doubles and " + self.opponent() + " rolled " + str(len(self.whitedubs)) + ".")
 			else:
-				print(name1 + " won!")
+				print(name1 + " won! Congratulations!")
+				print("You rolled " + str(len(self.whitedubs)) + " doubles and " + self.opponent() + " rolled " + str(len(self.blackdubs)) + ".")
 
 	def canFinish(self):
 		tot = 0
@@ -458,9 +475,9 @@ class Board:
 			if self.board[i] and self.board[i][0].color == self.curplayer:
 				tot += len(self.board[i])
 		if self.curplayer == "w":
-			tot += len(whitefin)
+			tot += len(self.whitefin)
 		else:
-			tot += len(blackfin)
+			tot += len(self.blackfin)
 		if tot == 15:
 			return True
 		else:
