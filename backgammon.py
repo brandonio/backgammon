@@ -332,7 +332,7 @@ class Board:
 			else:
 				n = self.name2
 			print(n + "'s eaten pieces (" + str(len(whitefin)) + "): ", end="")
-			for in range(len(self.whitefin)):
+			for i in range(len(self.whitefin)):
 				print("\u26AA", end="")
 			print()
 		if self.blackfin:
@@ -342,7 +342,7 @@ class Board:
 			else:
 				n = self.name1
 			print(n + "'s eaten pieces (" + str(len(blackfin)) + "): ", end="")
-			for in range(len(self.blackfin)):
+			for i in range(len(self.blackfin)):
 				print("\u26AB", end="")
 			print()
 		print()	
