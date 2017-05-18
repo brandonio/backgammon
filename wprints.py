@@ -22,6 +22,7 @@ class Board:
 					return False
 			return True
 		if self.sameColor(a + rolls[0], False) or (rolls[1] and self.sameColor(a + rolls[1], False)):
+			print("should be clear")
 			return True
 		else:
 			print(self.opponent() + " is blocking that path. Try again.")
@@ -57,7 +58,7 @@ class Board:
 		if a == 0:
 			f = False
 			if self.curplayer == "b":
-				print("Those are not valid positions. Try again.")
+				print("You cannot bring " + self.opponent() + "'s pieces into play. Try again.")
 				return False
 			elif self.canMove():
 				print("You do not have any pieces to bring back into play. Try again.")
@@ -65,7 +66,7 @@ class Board:
 		if a == 25:
 			f = False
 			if self.curplayer == "w":
-				print("Those are not valid positions. Try again.")
+				print("You cannot bring " + self.opponent() + "'s pieces into play. Try again.")
 				return False
 			elif self.canMove():
 				print("You do not have any pieces to bring back into play. Try again.")
@@ -101,8 +102,10 @@ class Board:
 				print("You do not have" + str + "to bring back into play. Try again.")
 				return False
 			if self.direction(a, b) and (self.isEmpty(b) or self.sameColor(b) or self.canEat(b)):
+				print("made it into here :)")
 				return True
 			else:
+				print("last statement in isValid")
 				return False
 			
 	def path(self, dist, f):
@@ -110,6 +113,8 @@ class Board:
 			print("You cannot move 0 steps. Try again.")
 			return []
 		if dist in self.curoll:
+			print("this is where i should see us")
+			print(dist, f)
 			return [dist]
 		elif len(self.curoll) == 1:
 			if f:
@@ -179,6 +184,7 @@ class Board:
 				return False
 		if r[0] == 'x':
 			# f = False
+			print("hola")
 			if self.canMove():
 				print("You do not have any eaten pieces to bring into play. Try again.")
 				return False
@@ -187,7 +193,9 @@ class Board:
 					r[0] = 0
 				else:
 					r[0] = 25
+				print(r)
 		x = self.path(abs(r[0] - r[1]), f)
+		print(x)
 		if not x:
 			print("You cannot reach that position. Try again.")
 			return False
@@ -195,6 +203,11 @@ class Board:
 			print("You cannot move that many pieces that far. Try again.")
 			return False
 		if not self.isValid(r[0], r[1], r[2]) or not self.isClear(r[0], r[1], x):
+			print(r[0])
+			print(r[1])
+			print(r[2])
+			print(x)
+			print("Something went wrong")
 			return False
 		else:
 			return x
@@ -216,8 +229,12 @@ class Board:
 					r.append(int(i))
 			if 'x' in spl:
 				r.insert(0, 'x')
+				print(r) #dont forget to comment this out!
+				print(len(r))
 			if len(r) == 2:
 				r.append(1)
+				print(r)
+				print(len(r))
 			x = self.parse(r)
 		ret = []
 		for i in range(r[2]):
@@ -287,15 +304,14 @@ class Board:
 					print("|", end="")
 			i += 1
 			print()
-		height = 0
 		for i in range(1, 14):
 			if len(self.board[i]) > height:
 				height = len(self.board[i])
 		i = max(height, 5)
-		num = 2
+		num = 0
 		if 5 > height:
 			num += 5 - height
-		for v in range(num):
+		for v in range(num + 2):
 			print("|                    |   |                    |")
 		func = print
 		while i > 0:
