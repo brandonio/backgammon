@@ -21,6 +21,7 @@ class Board:
 				if not self.sameColor(a, False):
 					print(self.opponent() + " is blocking that path. Try again.")
 					return False
+			return True
 		if self.sameColor(a + rolls[0], False) or self.sameColor(a + rolls[1], False):
 			return True
 		else:
@@ -37,75 +38,127 @@ class Board:
 		return False
 
 	def isValid(self, a, b, x):
+		f = True
 		if b == 0:
+			f = False
 			if self.curplayer == "w":
 				print("That is where " + self.opponent() + " eats pieces. You eat at 25. Try again.")
 				return False
-			else:
-				if self.canFinish():
-					return True
-				else:
-					print("You cannot eat pieces yet. Try again.")
-					return False
+			elif not self.canFinish():
+				print("You cannot eat pieces yet. Try again.")
+				return False
 		if b == 25:
+			f = False
 			if self.curplayer == "b":
 				print("That is where " + self.opponent() + " eats pieces. You eat at 0. Try again.")
 				return False
-			else:
-				if self.canFinish():
-					return True
-				else:
-					print("You cannot eat pieces yet. Try again.")
+			elif not self.canFinish():
+				print("You cannot eat pieces yet. Try again.")
+				return False
 		if a == 0:
+			f = False
 			if self.curplayer == "b":
 				print("You cannot bring " + self.opponent() + "'s pieces into play. Try again.")
 				return False
-			else:
-				return True
+			elif self.canMove():
+				print("You do have any pieces to bring back into play. Try again.")
+				return False
 		if a == 25:
+			f = False
 			if self.curplayer == "w":
 				print("You cannot bring " + self.opponent() + "'s pieces into play. Try again.")
 				return False
-			else:
-				return True
-		if a not in range(1, 25) or b not in range(0, 26):
+			elif self.canMove():
+				print("You do have any pieces to bring back into play. Try again.")
+				return False
+		if a not in range(0, 26) or b not in range(0, 26):
 			print("Those are not valid positions. Try again.")
 			return False
-		elif self.isEmpty(a, x):
-			print("There are not enough pieces at position " + str(a) + ". Try again.")
-			return False
-		elif self.curplayer != self.board[a][0].color:
-			print("You cannot move " + self.opponent() + "'s piece. Try again.")
-			return False
-		elif self.direction(a, b) and (self.isEmpty(b, x) or self.sameColor(b) or self.canEat(b)) and self.canMove():
-			return True
-		else:
-			return False
-
-	def path(self, dist):
-		if dist == 0:
-			return []
-		if dist in self.curoll:
-			return [dist]
-		elif len(self.curoll) == 1:
-			return []
-		elif len(self.curoll) == 2:
-			if sum(self.curoll) == dist:
-				return self.curoll
+		if f:
+			if self.isEmpty(a, x):
+				if x == 1:
+					print("There are no pieces at position " + str(a) + ". Try again.")
+				else:
+					print("There are not enough pieces at position " + str(a) + ". Try again.")
+				return False
+			if self.curplayer != self.board[a][0].color:
+				print("You cannot move " + self.opponent() + "'s piece. Try again.")
+				return False
+			if self.direction(a, b) and (self.isEmpty(b, 1) or self.sameColor(b) or self.canEat(b)) and self.canMove():
+				return True
 			else:
-				return []
-		val = self.curoll[0]
-		if dist % val != 0:
-			return []
-		elif int(dist/val) <= len(self.curoll):
-			ret = []
-			for i in range(int(dist/val)):
-				ret.append(val)
-			return ret
+				return False
 		else:
-			return []
+			if a == 25:
+				if len(self.whiteout) < x:
+					print("You do not have that many pieces to bring back into play. Try again.")
+					return False
+			elif a == 0:
+				if len(self.blackout) < x:
+					print("You do not have that many pieces to bring back into play. Try again.")
+					return False
+			elif not self.direction(a, b):
+				return False
+			elif b != 25 and b != 0:
+				if not (self.isEmpty(b, 1) or self.sameColor(b) or self.canEat(b)):
+					return False
+			else:
+				return True
+			
+	def path(self, dist, f):
+			if dist == 0:
+				return []
+			if dist in self.curoll:
+				return [dist]
+			elif len(self.curoll) == 1:
+				if f:
+					return []
+				else:
+					if dist <= self.curoll[0]: # = not needed since it woulda been caught but oh well
+						return [self.curoll[0]]
+					else:
+						return []
+			elif len(self.curoll) == 2:
+				if f:
+					if sum(self.curoll) == dist:
+						return self.curoll
+					else:
+						return []
+				else:
+					if dist <= self.curoll[0]:
+						return [self.curoll[0]]
+					if dist <= self.curoll[1]:
+						return [self.curoll[1]]
+					if dist <= sum(self.curoll):
+						return self.curoll
+					else:
+						return []
+			val = self.curoll[0]
+			if not f:
+				ret = []
+				sum = 0
+				i = 0
+				while sum < dist and i < len(self.curoll):
+					ret.append(v)
+					sum += v
+					i += 1
+				if sum < dist:
+					return []
+				else:
+					return ret
+			else:
+				if dist % val != 0:
+					return []
+				elif int(dist/val) <= len(self.curoll):
+					ret = []
+					for i in range(int(dist/val)):
+						ret.append(val)
+					return ret
+				else:
+					return []
 
 	def parse(self, r):
+		f = True
 		if len(r) < 2:
 			print("You need to enter at least a starting and ending position. Try again.")
 			return False
@@ -118,15 +171,20 @@ class Board:
 		if r[0] == 0 or r[0] == 25:
 			print("Those are not valid positions. Try again.")
 			return False
+		if r[1] == 0 or r[1] == 25:
+			f = False
+			if not self.canFinish():
+				print("You cannot eat pieces yet. Try again.")
+				return False
 		if r[0] == "x":
-			if (self.canMove(False)):
+			if self.canMove(False):
 				print("You do not have any eaten pieces to bring into play. Try again.")
 			else:
 				if self.curplayer == "w":
 					r[0] = 0
 				else:
 					r[0] = 25
-		x = self.path(abs(r[0] - r[1]))
+		x = self.path(abs(r[0] - r[1]), f)
 		if not x:
 			print("You cannot reach that position. Try again.")
 			return False
@@ -177,15 +235,21 @@ class Board:
 	def setCuroll(self, lst):
 		self.curoll = lst
 
-	def ignore(self, *args, **kwargs):
-		x = 0 #pointless
+	# def ignore(self, *args, **kwargs):
+	# 	x = 0 #pointless
 
 	def move(self, a, b, f):
 		if f:
-			if self.curplayer == "w":
-				self.board[b].append(self.whiteout.pop())
-			elif self.curplayer == "b":
-				self.board[b].append(self.blackout.pop())
+			if a == 0 or a == 25:			
+				if self.curplayer == "w":
+					self.board[b].append(self.whiteout.pop())
+				elif self.curplayer == "b":
+					self.board[b].append(self.blackout.pop())
+			if b == 0 or b == 25:
+				if self.curplayer == "w":
+					self.whitefin.append(self.board[a].pop())
+				elif self.curplayer == "b":
+					self.blackfin.append(self.board[a].pop())
 		else:
 			if len(self.board[b]) == 1 and self.board[b][0].color != self.curplayer:
 				if self.curplayer == "w":
@@ -261,6 +325,26 @@ class Board:
 			i -= 1
 			print()
 		print("  01 02 03 04 05 06        07 08 09 10 11 12  ")
+		if self.whitefin:
+			n = ""
+			if self.fiw:
+				n = self.name1
+			else:
+				n = self.name2
+			print(n + "'s eaten pieces (" + str(len(whitefin)) + "): ", end="")
+			for in range(len(self.whitefin)):
+				print("\u26AA", end="")
+			print()
+		if self.blackfin:
+			n = ""
+			if self.fiw:
+				n = self.name2
+			else:
+				n = self.name1
+			print(n + "'s eaten pieces (" + str(len(blackfin)) + "): ", end="")
+			for in range(len(self.blackfin)):
+				print("\u26AB", end="")
+			print()
 		print()	
 
 	def isEmpty(self, a, x=1):
@@ -354,11 +438,11 @@ class Board:
 	def whoWon(self):
 		if len(self.whitefin) == 15:
 			if self.fiw:
-				print(name2 + " won!")
-			else:
 				print(name1 + " won!")
+			else:
+				print(name2 + " won!")
 		elif len(self.blackfin) == 15:
-			if not self.fiw:
+			if self.fiw:
 				print(name2 + " won!")
 			else:
 				print(name1 + " won!")
@@ -385,7 +469,6 @@ class Board:
 
 
 def firstRoll():
-	print(" A high roll wins and the winner will play as white.")
 	name1 = input("Who will roll first?\n").title()
 	name2 = input("Who will roll second?\n").title()
 	print("Rolling...")
@@ -410,7 +493,7 @@ def intro():
 	print("Welcome to Brandon's Backgammon Game!")
 	print("-------------------------------------")
 	print("Making moves is relatively straightforward.")
-	print("For example: '3 8' means you want to move a piece from position 3 to position 8 and '3 8 2' means you want to move 2 pieces from position 3 to position 8. White eats at 25 and Black eats at 0, so '22 25' means white wants to eat a piece at position 22. To bring an eaten piece back into play, use 'x' as your starting position, regardless of your color. For example: 'x 3' means you want to move an eaten piece to position 3.")
+	print("For example: '3 8' means you want to move a piece from position 3 to position 8 and '3 8 2' means you want to move 2 pieces from position 3 to position 8. White eats at 25 and Black eats at 0, so '22 25' means white wants to eat a piece at position 22. To bring an eaten piece back into play, use 'x' as your STARTING position, regardless of your color. For example: 'x 3' means you are white and want to move an eaten piece to position 3.")
 	input("Press the enter key once you understand how to play!")
 
 def p(i=1):
@@ -419,7 +502,7 @@ def p(i=1):
 
 def start():
 	intro()
-	print("Great! Let's get started! But who will go first? ", end="")
+	print("Great! Let's get started! ", end="")
 	gb = Board(makeNew())
 	n1, n2 = gb.names()
 	lst = ["It is " + n1 + "'s turn. ", "It is " + n2 + "'s turn. "]
