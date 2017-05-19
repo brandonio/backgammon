@@ -55,7 +55,33 @@ class Board:
 			print("You have eaten pieces you need to play first. ", end="")
 		return False
 
+	def ok(self):
+		white = black = 0
+		white += len(self.whiteout)
+		white += len(self.whitefin)
+		black += len(self.blackout)
+		black += len(self.blackfin)
+		for i in range(1, 25):
+			if self.board[i]:
+				if self.board[i][0].color == "w":
+					white += len(self.board[i])
+				else:
+					black += len(self.board[i])
+		string = ""
+		b = True
+		if white != 15:
+			string += "White does not have the right number of pieces!\n"
+			b = False
+		if black != 15:
+			string += "Black does not have the right number of pieces!"
+			b = False
+		print(string)
+		return b
+
+
 	def isValid(self, a, b, x):
+		if not self.ok():
+			exit()
 		f = True
 		if b == 0:
 			f = False
@@ -274,12 +300,12 @@ class Board:
 		if f:
 			if a == 0 or a == 25:			
 				if self.curplayer == "w":
-					if self.canEat(a) and self.board[a][0].color != self.curplayer:
-						self.blackout.append(self.board[a].pop())
+					if self.canEat(b) and self.board[b][0].color != self.curplayer:
+						self.blackout.append(self.board[b].pop())
 					self.board[b].append(self.whiteout.pop())
 				elif self.curplayer == "b":
-					if self.canEat(a) and self.board[a][0].color != self.curplayer:
-						self.whiteout.append(self.board[a].pop())
+					if self.canEat(b) and self.board[b][0].color != self.curplayer:
+						self.whiteout.append(self.board[b].pop())
 					self.board[b].append(self.blackout.pop())
 			if b == 0 or b == 25:
 				if self.curplayer == "w":
@@ -287,7 +313,7 @@ class Board:
 				elif self.curplayer == "b":
 					self.blackfin.append(self.board[a].pop())
 		else:
-			if len(self.board[b]) == 1 and self.board[b][0].color != self.curplayer:
+			if self.canEat(b) and self.board[b][0].color != self.curplayer:
 				if self.curplayer == "w":
 					self.blackout.append(self.board[b].pop())
 				elif self.curplayer == "b":
@@ -511,8 +537,8 @@ class Board:
 
 
 def firstRoll():
-	name1 = input("Who will roll first?\n").title()
-	name2 = input("Who will roll second?\n").title()
+	name1 = input("What is the name of the first player?\n").title()
+	name2 = input("What is the name of the second player?\n").title()
 	print("Rolling...")
 	x = random.randint(1, 6)
 	y = random.randint(1, 6)
@@ -534,8 +560,13 @@ def firstRoll():
 def intro():
 	print("Welcome to Brandon's Backgammon Game!")
 	print("-------------------------------------")
-	print("Making moves is relatively straightforward.")
-	print("For example: '3 8' means you want to move a piece from position 3 to position 8 and '3 8 2' means you want to move 2 pieces from position 3 to position 8. White eats at 25 and Black eats at 0, so '22 25' means white wants to eat a piece at position 22. To bring an eaten piece back into play, use 'x' as your STARTING position, regardless of your color. For example: 'x 3' means you are white and want to move an eaten piece to position 3.")
+	print("How To Play:")
+	print("'3 8' means you want to move ONE piece from position 3 to 8.")
+	print("'3 8 2' means you want to move TWO pieces from position 3 to 8.")
+	print("White eats at position 25 and Black eats at position 0.")
+	print("'22 25' means white wants to eat a piece from position 22.")
+	print("To bring back a hit piece, use 'x' and then the desired position.")
+	print("'x 3' means you (white) want to play a hit piece to position 3.")
 	input("Press the enter key once you understand how to play!")
 
 def p(i=1):
