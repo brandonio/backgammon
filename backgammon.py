@@ -235,6 +235,9 @@ class Board:
 	def handle(self):
 		x = []
 		f = False
+		if not self.dubs(self.curoll, False):
+			print("You can no longer move. Your turn is now over.")
+			return self.curoll
 		while not x:
 			r = []
 			# self.canMove()
@@ -416,9 +419,9 @@ class Board:
 		else:
 			return False
 
-	def dubs(self, r): #this function is actually so crucial lol
+	def dubs(self, r, flag=True): #this function is actually so crucial lol
 		self.curoll = r
-		if len(r) == 4:
+		if len(r) == 4 and flag:
 			if self.curplayer == "w":
 				self.whitedubs += 1
 			else:
@@ -550,12 +553,15 @@ def start():
 		lst = lst[::-1]
 	ind = 0
 	while not gb.isWinner():
+		flag = True
 		print(lst[ind], end="")
 		ind = 1 - ind
 		r = roll()
 		if not gb.dubs(r):
+			flag = False
 			print("You rolled " + str(list(r))[1:len(str(list(r))) - 1])
 			print("You are unable to move so your turn will be skipped.")
+			print()
 		else:
 			while r:
 				gb.prettyprint()
@@ -563,7 +569,8 @@ def start():
 				for i in usedRolls:
 					r.remove(i)
 				gb.setCuroll(r)
-		p(8)
+		if flag:
+			p(8)
 		gb.changePlayer()
 	gb.whoWon()
 
