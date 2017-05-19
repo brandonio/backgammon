@@ -20,8 +20,27 @@ class Board:
 				a += i
 				if not self.sameColor(a):
 					return False
+				if self.canEat(a) and self.board[a][0].color != self.curplayer:
+					if self.curplayer == "w":
+						self.whiteout.append(self.board[a].pop())
+					else:
+						self.blackout.append(self.board[a].pop())
 			return True
-		if self.sameColor(a + rolls[0], False) or (rolls[1] and self.sameColor(a + rolls[1], False)):
+		first = a + rolls[0]
+		second = 0
+		if rolls[1]:
+			second = a + rolls[1]
+		if self.sameColor(first, False) or (second and self.sameColor(second, False)):
+			if self.canEat(first) and self.board[first][0].color != self.curplayer:
+				if self.curplayer == "w":
+					self.whiteout.append(self.board[first].pop())
+				else:
+					self.blackout.append(self.board[first].pop())
+			if second and self.canEat(second) and self.board[second][0].color != self.curplayer:
+				if self.curplayer == "w":
+					self.whiteout.append(self.board[second].pop())
+				else:
+					self.blackout.append(self.board[second].pop())
 			return True
 		else:
 			print(self.opponent() + " is blocking that path. Try again.")
@@ -93,12 +112,12 @@ class Board:
 			elif a == 25:
 				arr = self.blackout
 			if len(arr) < x:
-				str = ""
+				string = ""
 				if x == 1:
-					str = " 1 piece "
+					string = " 1 piece "
 				else:
-					str = " " + str(x) + " pieces "
-				print("You do not have" + str + "to bring back into play. Try again.")
+					string = " " + str(x) + " pieces "
+				print("You do not have" + string + "to bring back into play. Try again.")
 				return False
 			if self.direction(a, b) and (self.isEmpty(b) or self.sameColor(b) or self.canEat(b)):
 				return True
@@ -106,12 +125,17 @@ class Board:
 				return False
 			
 	def path(self, dist, f):
+		arr = []
+		if self.curplayer == "w":
+			arr = self.whiteout
+		else:
+			arr = self.blackout
 		if dist == 0:
 			print("You cannot move 0 steps. Try again.")
 			return []
 		if dist in self.curoll:
 			return [dist]
-		elif len(self.curoll) == 1:
+		elif len(self.curoll) == 1 or len(arr) > 1:
 			if f:
 				return []
 			else:
@@ -122,6 +146,10 @@ class Board:
 		elif len(self.curoll) == 2:
 			if f:
 				if sum(self.curoll) == dist:
+					# if len(arr) > 1:
+					# 	print("You still have other pieces to move. Try again.")
+					# 	return []
+					# else:
 					return self.curoll
 				else:
 					return []
@@ -154,6 +182,11 @@ class Board:
 				ret = []
 				for i in range(int(dist/val)):
 					ret.append(val)
+				# if len(arr) > 1:
+				# 	if len(ret) > 1:
+				# 		print("You still have other pieces to move. Try again.")
+				# 		return []
+				# else:
 				return ret
 			else:
 				return []
@@ -516,6 +549,7 @@ def start():
 		ind = 1 - ind
 		r = roll()
 		if not gb.dubs(r):
+			print("You rolled " + str(list(r))[1:len(str(list(r))) - 1])
 			print("You are unable to move so your turn will be skipped.")
 		else:
 			while r:
@@ -524,7 +558,7 @@ def start():
 				for i in usedRolls:
 					r.remove(i)
 				gb.setCuroll(r)
-		p(4)
+		p(8)
 		gb.changePlayer()
 	gb.whoWon()
 
