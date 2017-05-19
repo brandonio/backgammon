@@ -466,6 +466,7 @@ class Board:
 			self.curplayer = "w"
 
 	def whoWon(self):
+		#might be backwards
 		if len(self.whitefin) == 15:
 			if self.fiw:
 				print(name1 + " won! Congratulations!")
