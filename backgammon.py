@@ -28,7 +28,7 @@ class Board:
 			return True
 		first = a + rolls[0]
 		second = 0
-		if rolls[1]:
+		if len(rolls) > 1:
 			second = a + rolls[1]
 		if self.sameColor(first, False) or (second and self.sameColor(second, False)):
 			if self.canEat(first) and self.board[first][0].color != self.curplayer:
@@ -114,7 +114,7 @@ class Board:
 			if len(arr) < x:
 				string = ""
 				if x == 1:
-					string = " 1 piece "
+					string = " a piece "
 				else:
 					string = " " + str(x) + " pieces "
 				print("You do not have" + string + "to bring back into play. Try again.")
@@ -271,8 +271,12 @@ class Board:
 		if f:
 			if a == 0 or a == 25:			
 				if self.curplayer == "w":
+					if self.canEat(a) and self.board[a][0].color != self.curplayer:
+						self.blackout.append(self.board[a].pop())
 					self.board[b].append(self.whiteout.pop())
 				elif self.curplayer == "b":
+					if self.canEat(a) and self.board[a][0].color != self.curplayer:
+						self.whiteout.append(self.board[a].pop())
 					self.board[b].append(self.blackout.pop())
 			if b == 0 or b == 25:
 				if self.curplayer == "w":
@@ -423,11 +427,11 @@ class Board:
 			opens = []
 			if self.curplayer == "w":
 				for i in range(1, 7):
-					if self.isEmpty(i):
+					if self.isEmpty(i) or self.canEat(i):
 						opens.append(i)
 			else:
 				for i in range(19, 25):
-					if self.isEmpty(i):
+					if self.isEmpty(i) or self.canEat(i):
 						opens.append(25 - i)
 			s = set(r)
 			opens = set(opens)
