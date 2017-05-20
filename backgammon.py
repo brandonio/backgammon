@@ -16,8 +16,9 @@ class Board:
 		if b < a:
 			a, b = b, a
 		if len(rolls) > 2:
-			for i in rolls:
-				a += i
+			val = rolls.pop()
+			for i in range(len(rolls)):
+				a += val
 				if not self.sameColor(a):
 					return False
 				if self.canEat(a) and self.board[a][0].color != self.curplayer:
@@ -30,13 +31,15 @@ class Board:
 		second = 0
 		if len(rolls) > 1:
 			second = a + rolls[1]
+		flag = True
 		if self.sameColor(first, False) or (second and self.sameColor(second, False)):
-			if self.canEat(first) and self.board[first][0].color != self.curplayer:
+			if second and self.canEat(first) and self.board[first][0].color != self.curplayer:
+				flag = False
 				if self.curplayer == "w":
 					self.whiteout.append(self.board[first].pop())
 				else:
 					self.blackout.append(self.board[first].pop())
-			if second and self.canEat(second) and self.board[second][0].color != self.curplayer:
+			if flag and second and self.canEat(second) and self.board[second][0].color != self.curplayer:
 				if self.curplayer == "w":
 					self.whiteout.append(self.board[second].pop())
 				else:
