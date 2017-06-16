@@ -8,8 +8,13 @@ class Board:
 	winner, name1, name2 = "", "", ""
 	fiw = True
 
+	prevboard = {}
+	prevrolls = []
+	prevplayer = ""
+
 	def __init__(self, board):
 		self.board = board
+		self.prevboard = dict(board)
 		self.fiw, self.name1, self.name2 = firstRoll()
 
 	def isClear(self, a, b, rolls):
@@ -47,6 +52,16 @@ class Board:
 			return True
 		else:
 			print(self.opponent() + " is blocking that path. Try again.")
+			return False
+
+	def undo(self):
+		self.board = dict(self.prevboard)
+		self.curoll = list(self.prevrolls)
+
+	def canundo(self):
+		if self.prevplayer == self.curplayer:
+			return True
+		else:
 			return False
 
 	def canMove(self, f=False):
@@ -136,11 +151,12 @@ class Board:
 			else:
 				return False
 		else:
+			arr = []
 			if a == 0:
 				arr = self.whiteout
 			elif a == 25:
 				arr = self.blackout
-			if len(arr) < x:
+			if arr and len(arr) < x:
 				string = ""
 				if x == 1:
 					string = " a piece "
@@ -275,6 +291,16 @@ class Board:
 				s = input("Notice that you have pieces out of play. Make your move...")
 			else:
 				s = input("Make your move...")
+			stripped = s.strip()
+			if len(stripped) == 4 and "undo" in stripped:
+				if not self.canundo():
+					print("You cannot undo " + self.opponent() + "'s move!")
+				else:
+					x = input("Do you want to undo your move?\n")
+					if "y" in x.lower():
+						print("Undoing your move...")
+						self.undo()
+						return
 			spl = s.split()
 			for i in spl:
 				if i.isdigit():
@@ -288,6 +314,7 @@ class Board:
 		for i in range(r[2]):
 			self.move(r[0], r[1], f)
 			ret.extend(x)
+		self.prevrolls = list(self.curoll)
 		return ret
 
 	def names(self):
@@ -300,6 +327,8 @@ class Board:
 	# 	x = 0 #pointless
 
 	def move(self, a, b, f):
+		self.prevplayer = str(self.curplayer)
+		self.prevboard = dict(self.board)
 		if f:
 			if a == 0 or a == 25:			
 				if self.curplayer == "w":
@@ -357,7 +386,7 @@ class Board:
 			i += 1
 			print()
 		height = 0
-		for i in range(1, 14):
+		for i in range(1, 13):
 			if len(self.board[i]) > height:
 				height = len(self.board[i])
 		i = max(height, 5)
