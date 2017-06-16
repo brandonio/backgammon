@@ -28,9 +28,9 @@ class Board:
 					return False
 				if self.canEat(a) and self.board[a][0].color != self.curplayer:
 					if self.curplayer == "w":
-						self.whiteout.append(self.board[a].pop())
-					else:
 						self.blackout.append(self.board[a].pop())
+					else:
+						self.whiteout.append(self.board[a].pop())
 			return True
 		first = a + rolls[0]
 		second = 0
@@ -41,14 +41,14 @@ class Board:
 			if second and self.canEat(first) and self.board[first][0].color != self.curplayer:
 				flag = False
 				if self.curplayer == "w":
-					self.whiteout.append(self.board[first].pop())
-				else:
 					self.blackout.append(self.board[first].pop())
+				else:
+					self.whiteout.append(self.board[first].pop())
 			if flag and second and self.canEat(second) and self.board[second][0].color != self.curplayer:
 				if self.curplayer == "w":
-					self.whiteout.append(self.board[second].pop())
-				else:
 					self.blackout.append(self.board[second].pop())
+				else:
+					self.whiteout.append(self.board[second].pop())
 			return True
 		else:
 			print(self.opponent() + " is blocking that path. Try again.")
