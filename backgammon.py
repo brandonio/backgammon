@@ -9,12 +9,13 @@ class Board:
 	fiw = True
 
 	prevboard = {}
-	prevrolls = []
+	prevwhiteout, prevblackout, prevwhitefin, prevblackfin, prevrolls = [], [], [], [], []
 	prevplayer = ""
+	lencuroll = 0
+	undid = False
 
 	def __init__(self, board):
 		self.board = board
-		self.prevboard = dict(board)
 		self.fiw, self.name1, self.name2 = firstRoll()
 
 	def isClear(self, a, b, rolls):
@@ -55,10 +56,22 @@ class Board:
 			return False
 
 	def undo(self):
-		self.board = dict(self.prevboard)
+		self.undid = True
 		self.curoll = list(self.prevrolls)
+		self.whitefin = list(self.prevwhitefin)
+		self.blackfin = list(self.prevblackfin)
+		self.whitout = list(self.prevwhiteout)
+		self.blackout = list(self.prevblackout)
+		for i in range(1, 25):
+			self.board[i] = list(self.prevboard[i])
 
 	def canundo(self):
+		if self.prevplayer == "" or self.lencuroll == len(self.curoll):
+			print("There are no moves for you to undo!")
+			return False
+		if self.undid:
+			print("You can only undo one move!")
+			return False
 		if self.prevplayer == self.curplayer:
 			return True
 		else:
@@ -95,7 +108,6 @@ class Board:
 			b = False
 		print(string)
 		return b
-
 
 	def isValid(self, a, b, x):
 		if not self.ok():
@@ -238,6 +250,8 @@ class Board:
 
 	def parse(self, r):
 		f = True
+		if r == None:
+			return False
 		if len(r) < 3:
 			print("You need to enter at least a starting and ending position. Try again.")
 			return False
@@ -293,14 +307,13 @@ class Board:
 				s = input("Make your move...")
 			stripped = s.strip()
 			if len(stripped) == 4 and "undo" in stripped:
-				if not self.canundo():
-					print("You cannot undo " + self.opponent() + "'s move!")
-				else:
+				if self.canundo():
 					x = input("Do you want to undo your move?\n")
 					if "y" in x.lower():
 						print("Undoing your move...")
 						self.undo()
-						return
+					return
+				return
 			spl = s.split()
 			for i in spl:
 				if i.isdigit():
@@ -315,22 +328,34 @@ class Board:
 			self.move(r[0], r[1], f)
 			ret.extend(x)
 		self.prevrolls = list(self.curoll)
+		self.prevplayer = str(self.curplayer)
 		return ret
 
 	def names(self):
 		return self.name1, self.name2
 
 	def setCuroll(self, lst):
-		self.curoll = lst
+		self.curoll = list(lst)
+
+	def setlencuroll(self, num):
+		self.lencuroll = num
 
 	# def ignore(self, *args, **kwargs):
 	# 	x = 0 #pointless
 
+	def setprev(self):
+		self.prevwhitefin = list(self.whitefin)
+		self.prevblackfin = list(self.blackfin)
+		self.prevwhitout = list(self.whiteout)
+		self.prevblackout = list(self.blackout)
+		for i in range(1, 25):
+			self.prevboard[i] = list(self.board[i])
+
 	def move(self, a, b, f):
-		self.prevplayer = str(self.curplayer)
-		self.prevboard = dict(self.board)
+		self.undid = False
+		self.setprev()
 		if f:
-			if a == 0 or a == 25:			
+			if a == 0 or a == 25:
 				if self.curplayer == "w":
 					if self.canEat(b) and self.board[b][0].color != self.curplayer:
 						self.blackout.append(self.board[b].pop())
@@ -351,6 +376,10 @@ class Board:
 				elif self.curplayer == "b":
 					self.whiteout.append(self.board[b].pop())
 			self.board[b].append(self.board[a].pop())
+		print("should not be equal...")
+		for i in range(1, 25):
+			if self.board[i] != self.prevboard[i]:
+				print("not equal")
 
 	def prettyprint(self):
 		def newprint(*args, **kwargs):
@@ -620,6 +649,7 @@ def start():
 		print(lst[ind], end="")
 		ind = 1 - ind
 		r = roll()
+		gb.setlencuroll(len(list(r)))
 		if not gb.dubs(r):
 			flag = False
 			print("You rolled " + str(list(r))[1:len(str(list(r))) - 1])
@@ -629,11 +659,14 @@ def start():
 			while r:
 				gb.prettyprint()
 				usedRolls = gb.handle()
-				for i in usedRolls:
-					r.remove(i)
-				gb.setCuroll(r)
+				if usedRolls:
+					for i in usedRolls:
+						r.remove(i)
+					gb.setCuroll(r)
+				else:
+					r = list(gb.curoll)
 		if flag:
-			p(8)
+			p(4)
 		gb.changePlayer()
 	gb.whoWon()
 
