@@ -70,7 +70,7 @@ class Board:
 			print("There are no moves for you to undo!")
 			return False
 		if self.undid:
-			print("You can only undo one move!")
+			print("You can only undo your most recent move!")
 			return False
 		if self.prevplayer == self.curplayer:
 			return True
@@ -306,7 +306,7 @@ class Board:
 			else:
 				s = input("Make your move...")
 			stripped = s.strip()
-			if len(stripped) == 4 and "undo" in stripped:
+			if "undo" in stripped:
 				if self.canundo():
 					x = input("Do you want to undo your move?\n")
 					if "y" in x.lower():
@@ -314,11 +314,11 @@ class Board:
 						self.undo()
 					return
 				return
-			spl = s.split()
+			spl = stripped.split()
 			for i in spl:
 				if i.isdigit():
 					r.append(int(i))
-			if 'x' in spl:
+			if spl[0] == 'x':
 				r.insert(0, 'x')
 			if len(r) == 2:
 				r.append(1)
@@ -376,10 +376,6 @@ class Board:
 				elif self.curplayer == "b":
 					self.whiteout.append(self.board[b].pop())
 			self.board[b].append(self.board[a].pop())
-		print("should not be equal...")
-		for i in range(1, 25):
-			if self.board[i] != self.prevboard[i]:
-				print("not equal")
 
 	def prettyprint(self):
 		def newprint(*args, **kwargs):
@@ -517,11 +513,11 @@ class Board:
 			opens = []
 			if self.curplayer == "w":
 				for i in range(1, 7):
-					if self.isEmpty(i) or self.canEat(i):
+					if self.isEmpty(i) or self.canEat(i) or self.board[i].color == "w":
 						opens.append(i)
 			else:
 				for i in range(19, 25):
-					if self.isEmpty(i) or self.canEat(i):
+					if self.isEmpty(i) or self.canEat(i) or self.board[i].color == "b":
 						opens.append(25 - i)
 			s = set(r)
 			opens = set(opens)
